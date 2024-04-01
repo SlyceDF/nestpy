@@ -7,7 +7,7 @@
 
 Install nestpy by executing:
 ```bash
-$ pip install nestpy
+$ pip install nestpython
 ```
 After importing;
 
@@ -39,4 +39,4 @@ if (n % 2 == 0) {
 ---
 github : https://github.com/slycedf/nestpy 
   
-pypi : https://pypi.org/project/nestpy
+pypi : https://pypi.org/project/nestpython
