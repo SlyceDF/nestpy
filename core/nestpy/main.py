@@ -119,9 +119,9 @@ def ncompile(modified_code, indent_amount=1):
     caseDeconflict = Token(sclund('case'), TokenTypes.APPENDSUB)
     delDeconflict = Token(sclund('del'), TokenTypes.APPENDSUB)
     passDeconflict = Token(sclund('pass'), TokenTypes.APPENDSUB)
-    commentLeft = Token(r'/\*')
-    commentRight = Token(r'\*/', TokenTypes.INDENTED)
-    commentLine = Token(r'//', TokenTypes.MAP)
+    comment = Token(r'\/\*[\s\S]*\*\/', TokenTypes.INDENTED)
+    lineComment = Token(r'\/\/.*', TokenTypes.INDENTED)
+    lineStatement = Token(r'/\|.*\|\\', TokenTypes.INDENTED)
     intDiv = Token(r'~/', TokenTypes.MAP)
     caseShorthand = Token(r'\?', TokenTypes.SHORTHAND)
     macroDefine = Token(r'#\s*[\w\n]+\s*#\s*<[\s\S]*>\s*#', TokenTypes.MACROS)
@@ -148,7 +148,6 @@ def ncompile(modified_code, indent_amount=1):
       Tokens.returnShorthand.value.id: 'return',
       Tokens.lambdaShorthand.value.id: 'lambda',
       Tokens.delShorthand.value.id: 'del',
-      Tokens.commentLine.value.id: '#',
       Tokens.intDiv.value.id: '//'
   }
 
@@ -182,8 +181,6 @@ def ncompile(modified_code, indent_amount=1):
   in_multilineStringDouble = False
   in_stringSingle = False
   in_stringDouble = False
-  in_comment = False
-  in_line_comment = False
   in_fstring = False
   in_rstring = False
   fstring_indent_level = None
@@ -208,8 +205,6 @@ def ncompile(modified_code, indent_amount=1):
     nonlocal in_multilineStringDouble
     nonlocal in_stringSingle
     nonlocal in_stringDouble
-    nonlocal in_comment
-    nonlocal in_line_comment
     nonlocal in_fstring
     nonlocal in_rstring
     nonlocal fstring_indent_level
@@ -226,25 +221,12 @@ def ncompile(modified_code, indent_amount=1):
      for n, token in enumerate(tokens):
       ptoken = tokens[n - 1] if n > 0 else bufferToken
       match token.id:       
-        case Tokens.commentLeft.value.id:
-          in_comment = True
+        case Tokens.comment.value.id | Tokens.lineComment.value.id:
+          print(token.symb)
           continue
-        case Tokens.commentRight.value.id:
-          in_comment = False
+        case Tokens.lineStatement.value.id:
+          compiled_code += '#' + token.symb[2:-2].rstrip() + '\n' + indent * indent_level
           continue
-        case Tokens.commentLine.value.id:
-          in_line_comment = True
-          compiled_code += '#'
-          continue
-        case Tokens.newline.value.id if in_line_comment:
-          in_line_comment = False
-          compiled_code += '\n'
-          continue
-      if in_comment:
-        continue
-      if in_line_comment:
-        compiled_code += token.symb
-        continue
       if isNRawEscapedEscape(token):
         compiled_code += '\\'
       if (token.id == Tokens.indentLeftDouble.value.id 
@@ -254,9 +236,9 @@ def ncompile(modified_code, indent_amount=1):
         raise breakout
       if token.id == Tokens.indentSelfClose.value.id:
         if compilable():
-          compiled_code = (compiled_code.rstrip() 
+          compiled_code = (compiled_code.rstrip()
                            + f':\n{indent * (indent_level+1)}\
-pass\n{indent * (indent_level)}')
+pass\n{indent * indent_level}')
           continue
         else:
           tokens = ([Tokens.indentLeft.value] 
