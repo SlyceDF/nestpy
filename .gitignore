@@ -1,0 +1,7 @@
+test/
+core/dist/
+core/build/
+core/*egg-info/
+.idea/
+core/__pycache__/
+core/tessarinified/__pycache__/
