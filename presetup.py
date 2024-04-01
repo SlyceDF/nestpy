@@ -17,15 +17,21 @@ args = parser.parse_args()
 
 version = '0.0.0'
 
+
+param = eval(read('core/param.i'))
+
+
 try:
     version = args.version
 except IndexError:
     pass
 
+if version == '.':
+    version = param['version']
+
 test = args.test
 
-f = open('core/param.i', 'w')
-f.write(str({'test': test, 'version': version}))
-f.close()
+with open('core/param.i', 'w') as f:
+    f.write(str({'test': test, 'version': version}))
 
 runcmd(read('setup.bat'))

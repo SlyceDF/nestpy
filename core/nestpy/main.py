@@ -107,7 +107,7 @@ def ncompile(modified_code, indent_amount=1):
     delShorthand = Token(r'~>', TokenTypes.SHORTHAND)
     lambdaShorthand = Token(r';=', TokenTypes.SHORTHAND)
     indentNewline = Token(r';', TokenTypes.INDENTED, TokenTypes.SYNTACTICAL)
-    notShorthand = Token(r'!', TokenTypes.SHORTHAND)
+    notShorthand = Token(r'!(?!=)', TokenTypes.SHORTHAND)
     andDeconflict = Token(sclund('and'), TokenTypes.APPENDSUB)
     orDeconflict = Token(sclund('or'), TokenTypes.APPENDSUB)
     notDeconflict = Token(sclund('not'), TokenTypes.APPENDSUB)
