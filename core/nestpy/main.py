@@ -134,7 +134,7 @@ def ncompile(modified_code, indent_amount=1):
       Tokens.dictIndentLeft.value.id: '{',
       Tokens.dictIndentRight.value.id: '}',
       Tokens.nativeSemicolon.value.id: ';',
-      Tokens.nativeAssignment.value.id: '<-',
+      Tokens.nativeAssignment.value.id: ':=',
       Tokens.andShorthand.value.id: 'and',
       Tokens.orShorthand.value.id: 'or',
       Tokens.notShorthand.value.id: 'not',
