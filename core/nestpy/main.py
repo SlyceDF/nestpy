@@ -71,9 +71,6 @@ def ncompile(modified_code, indent_amount=1):
 
   # TOKEN DECLARATIONS
 
-  def sclude(regex):
-    return r'(?<![\w0-9])' + regex + r'(?![\w0-9])'
-
   def sclund(regex):
     return r'(?<![\w0-9])' + regex + r'_*(?![\w0-9])'
 
@@ -185,17 +182,17 @@ def ncompile(modified_code, indent_amount=1):
   in_rstring = False
   fstring_indent_level = None
   in_fstringComp = False
+  in_fstringCompString = False
   in_multilineString = lambda: (in_multilineStringSingle or
                                 in_multilineStringDouble)
   in_string = lambda: (in_multilineString() or in_stringDouble or
                        in_stringSingle)
-  compilable = lambda: ((not in_string()) or in_fstringComp)
+  compilable = lambda: ((not in_string()) or (in_fstringComp and not in_fstringCompString))
   indent = ' ' * indent_amount
   buffer = 1
   tokens = tokenize(modified_code, [t.value for t in Tokens], buffer)
   compiling = True
   ptoken = Token()
-
   class breakout(Exception):
     pass
   def compile(bufferToken):
@@ -209,6 +206,7 @@ def ncompile(modified_code, indent_amount=1):
     nonlocal in_rstring
     nonlocal fstring_indent_level
     nonlocal in_fstringComp
+    nonlocal in_fstringCompString
     nonlocal in_multilineString
     nonlocal in_string
     nonlocal compilable
@@ -220,13 +218,13 @@ def ncompile(modified_code, indent_amount=1):
     try:
      for n, token in enumerate(tokens):
       ptoken = tokens[n - 1] if n > 0 else bufferToken
-      match token.id:       
-        case Tokens.comment.value.id | Tokens.lineComment.value.id:
-          print(token.symb)
-          continue
-        case Tokens.lineStatement.value.id:
-          compiled_code += '#' + token.symb[2:-2].rstrip() + '\n' + indent * indent_level
-          continue
+      if compilable():
+        match token.id:
+          case Tokens.comment.value.id | Tokens.lineComment.value.id:
+            continue
+          case Tokens.lineStatement.value.id:
+            compiled_code += '#' + token.symb[2:-2].rstrip() + '\n' + indent * indent_level
+            continue
       if isNRawEscapedEscape(token):
         compiled_code += '\\'
       if (token.id == Tokens.indentLeftDouble.value.id 
@@ -282,20 +280,28 @@ pass\n{indent * indent_level}')
                               else token.symb.replace('\n', ''))
       if TokenTypes.STRING in token.types:
         match token.id:
-          case Tokens.multilineStringSingle.value.id if not in_multilineStringDouble:
+          case Tokens.multilineStringSingle.value.id if not in_multilineStringDouble or in_fstringComp:
             in_multilineStringSingle = not in_multilineStringSingle
-          case Tokens.multilineStringDouble.value.id if not in_multilineStringSingle:
+            if in_fstringComp:
+              in_fstringCompString = not in_fstringCompString
+          case Tokens.multilineStringDouble.value.id if not in_multilineStringSingle or in_fstringComp:
             in_multilineStringDouble = not in_multilineStringDouble
-          case Tokens.stringDouble.value.id if not (in_multilineString()
-                                                    or in_stringSingle):
+            if in_fstringComp:
+              in_fstringCompString = not in_fstringCompString
+          case Tokens.stringDouble.value.id if (not (in_multilineString()
+                                                    or in_stringSingle) or in_fstringComp):
             if not isNRawEscape(ptoken):
              in_stringDouble = not in_stringDouble
+             if in_fstringComp:
+               in_fstringCompString = not in_fstringCompString
             else:
              compiled_code += token.symb
              continue
-          case Tokens.stringSingle.value.id if not (in_multilineString()
-                                                    or in_stringDouble):
+          case Tokens.stringSingle.value.id if (not (in_multilineString()
+                                                    or in_stringDouble or in_fstringComp)):
             if not isNRawEscape(ptoken):
+              if in_fstringComp:
+                in_fstringCompString = not in_fstringCompString
               in_stringSingle = not in_stringSingle
             else:
               compiled_code += token.symb
