@@ -20,7 +20,7 @@ def ncompile(modified_code, indent_amount=1):
     return out
 
   TokenTypes = Enum('TokenTypes', [
-      'SYNTACTICAL', 'MISS', 'INDENTED', 
+      'SYNTACTICAL', 'MULTILINE', 'INDENTED',
     'MAP', 'CTYPES', 'STRING', 
     'APPENDSUB', 'SHORTHAND', 'MACROS', 'ESCAPEMENT'
   ])
@@ -53,10 +53,9 @@ def ncompile(modified_code, indent_amount=1):
     while i + j < len(string):
       for token in tokens:
         F = (i + j - buffer >= 0)
-        match = re.match(
+        if match := re.match(
             fr'[\s\S]{{{buffer}}}{token.symb}' if F else token.symb,
-            string[i + j - buffer:] if F else string, re.M)
-        if match:
+            string[i + j - buffer:] if F else string, re.M):
           match_string = match.group()[buffer:] if F else match.group()
           if string[i:i + j] != '':
             tokenized.append(anonToken(string[i:i + j]))
@@ -91,10 +90,12 @@ def ncompile(modified_code, indent_amount=1):
     indentSelfClose = Token(r'{\s*}', TokenTypes.INDENTED, TokenTypes.SYNTACTICAL)
     indentLeft = Token(r'{', TokenTypes.INDENTED, TokenTypes.SYNTACTICAL)
     indentRight = Token(r'}', TokenTypes.INDENTED, TokenTypes.SYNTACTICAL)
-    newline = Token(r'\n', TokenTypes.INDENTED, TokenTypes.MISS)
+    newline = Token(r'\n', TokenTypes.INDENTED, TokenTypes.MULTILINE)
     returnShorthand = Token(r'=>', TokenTypes.SHORTHAND)
     nativeSemicolon = Token(r',,', TokenTypes.MAP)
     nativeAssignment = Token(r'<-', TokenTypes.MAP)
+    incrementOperator = Token(r'\+\+', TokenTypes.MAP)
+    decrementOperator = Token(r'--', TokenTypes.MAP)
     andShorthand = Token(r'&&', TokenTypes.SHORTHAND)
     orShorthand = Token(r'\|\|', TokenTypes.SHORTHAND)
     isShorthand = Token(r'=&', TokenTypes.SHORTHAND)
@@ -147,6 +148,8 @@ def ncompile(modified_code, indent_amount=1):
       Tokens.returnShorthand.value.id: 'return',
       Tokens.lambdaShorthand.value.id: 'lambda',
       Tokens.delShorthand.value.id: 'del',
+      Tokens.incrementOperator.value.id: '+=1',
+      Tokens.decrementOperator.value.id: '-=1',
       Tokens.intDiv.value.id: '//'
   }
 
@@ -340,7 +343,7 @@ pass\n{indent * indent_level}')
               tokens = tokens[n+2:]
               raise breakout
       if (not (TokenTypes.SYNTACTICAL in token.types and compilable())
-          and not (TokenTypes.MISS in token.types and not in_multilineString())):
+          and not (TokenTypes.MULTILINE in token.types and not in_multilineString())):
         
         mtoken = tokenMap[token.id] if (TokenTypes.MAP in token.types
                                         and compilable()) else token.symb
