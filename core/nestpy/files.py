@@ -73,7 +73,6 @@ def nbuild(dir, new_dir, indent_amount=1, erase_dir=None,
     nonlocal erase_dir
     nonlocal replace_previous
     nonlocal transfer_other_files
-    print(subpath)
     if _path.isdir(f'{new_dir}/{subpath}'):
       def remove():
         _rmtree(f'{new_dir}/{subpath}')
