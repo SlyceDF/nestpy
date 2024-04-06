@@ -1,8 +1,5 @@
-from enum import Enum as _Enum
-from glob import glob as _glob
 from os import mkdir as _mkdir
 from os import path as _path
-from os import remove as _remove
 from os import walk as _walk
 from os import scandir as _scandir
 from os import chdir as _chdir
@@ -89,7 +86,6 @@ def nbuild(dir, new_dir, indent_amount=1, erase_dir=None,
     else:
       _mkdir(f'{new_dir}/{subpath}')
     compilable, leaveBe = _filterByFileExt(_getFilesDirs(f'{dir}/{subpath}')[0], '.npy')
-    print(_getFilesDirs(f'{dir}/{subpath}'))
     for file in compilable:
       ncompile_to(f'{dir}/{subpath}/{file}', f'{new_dir}/{subpath}/{file.rsplit("/", 1)[-1].rsplit(".", 1)[0]}.py',
                indent_amount, replace_previous)
