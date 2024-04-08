@@ -19,7 +19,7 @@ with open(parse('../README.md'), 'r') as f, open(parse('README.md'), 'w') as fn:
 
     setup(
         name='nestpython',
-        packages=find_packages(include=['nestpy']),
+        packages=find_packages(include=['nestpython']),
         version=version,
         description='python with braces.',
         author='slycedf',
