@@ -31,25 +31,25 @@ def _getFilesDirs(dirPath):
     _chdir(oldDir)
     return a, b
 
-def _filterByFileExt(files, fileExt):
+def _filterByFileExt(files, *fileExts:list[str]):
     passed = []
     failed = []
     for file in files:
-        if _path.splitext(file)[-1] == fileExt:
+        if any(file.endswith(fileExt) for fileExt in fileExts):
             passed.append(file)
             continue
         failed.append(file)
     return passed, failed
 
-def ncompile_to(file, new_file=None, indent_amount=1, replace_previous=False):
-  if new_file is None:
-    new_file = file.rsplit('.', 1)[0] + '.py'
+def ncompile_to(file:str, new_file:str=None, *, indent_amount:int=1, replace_previous:bool=False, cythonic:bool=None):
+  cythonic = _path.splitext(file)[~0] == '.npx' if cythonic is None else cythonic
+  new_file = f'{_path.splitext(file)[0]}.py{"x" if cythonic else ""}' if new_file is None else new_file
   def compile(file):
     print(f'> compiling {file}')
     with (
       open(file, 'r') as f, 
       open(new_file, 'w') as fn):
-        fn.write(_m.ncompile(f.read(), indent_amount))
+        fn.write(_m.ncompile(f.read(), indent_amount=indent_amount, cythonic=cythonic))
   if not _path.isfile(new_file) or replace_previous:
     compile(file)
   else:
@@ -59,8 +59,8 @@ def ncompile_to(file, new_file=None, indent_amount=1, replace_previous=False):
       compile(file)
 
 
-def nbuild(dir, new_dir, indent_amount=1, erase_dir=None,
-           replace_previous=False, transfer_other_files=True):
+def nbuild(dir:str, new_dir:str, *, indent_amount:int=1, erase_dir:bool=None,
+           replace_previous:bool=False, transfer_other_files:bool=True):
  subpath = ''
  def subbuild():
     nonlocal dir
@@ -85,10 +85,10 @@ def nbuild(dir, new_dir, indent_amount=1, erase_dir=None,
 
     else:
       _mkdir(f'{new_dir}/{subpath}')
-    compilable, leaveBe = _filterByFileExt(_getFilesDirs(f'{dir}/{subpath}')[0], '.npy')
+    compilable, leaveBe = _filterByFileExt(_getFilesDirs(f'{dir}/{subpath}')[0], ['.npy', '.npx'])
     for file in compilable:
-      ncompile_to(f'{dir}/{subpath}/{file}', f'{new_dir}/{subpath}/{file.rsplit("/", 1)[-1].rsplit(".", 1)[0]}.py',
-               indent_amount, replace_previous)
+      ncompile_to(f'{dir}/{subpath}/{file}', f'{new_dir}/{subpath}/{(fsplit := _path.splitext(file.rsplit("/", 1)[-1]))[0]}.py{"x" if fsplit[~0] == ".npx" else ""}',
+               indent_amount=indent_amount, replace_previous=replace_previous)
     if transfer_other_files:
       for file in leaveBe:
         print(f'> transferring {dir}/{subpath}/{file}')
@@ -99,9 +99,9 @@ def nbuild(dir, new_dir, indent_amount=1, erase_dir=None,
 
  subbuild()
 
-def ncompile(file, indent_amount=1):
+def ncompile(file:str, *, indent_amount:int=1):
   with open(file, 'r') as f:
-    return _m.ncompile(f.read(), indent_amount)
+    return _m.ncompile(f.read(), indent_amount=indent_amount)
 
-def nexec(file):
-  exec(ncompile(file))
+def nexec(file:str, *, indent_amount:int=1):
+  exec(ncompile(file, indent_amount=indent_amount))

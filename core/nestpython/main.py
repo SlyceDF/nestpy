@@ -1,4 +1,4 @@
-def ncompile(modified_code, indent_amount=1):
+def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False):
 
   import contextlib
   import re
@@ -20,9 +20,10 @@ def ncompile(modified_code, indent_amount=1):
     return out
 
   TokenTypes = Enum('TokenTypes', [
-      'SYNTACTICAL', 'MULTILINE', 'INDENTED',
-    'MAP', 'CTYPES', 'STRING', 
-    'APPENDSUB', 'SHORTHAND', 'MACROS', 'ESCAPEMENT'
+    'SYNTACTICAL', 'MULTILINE',
+    'INDENTED', 'MAP', 'CYTHON',
+    'STRING', 'APPENDSUB', 'SHORTHAND',
+    'MACROS', 'ESCAPEMENT'
   ])
 
   id = 0
@@ -100,6 +101,9 @@ def ncompile(modified_code, indent_amount=1):
     orShorthand = Token(r'\|\|', TokenTypes.SHORTHAND)
     isShorthand = Token(r'=&', TokenTypes.SHORTHAND)
     isNotShorthand = Token(r'!=&', TokenTypes.SHORTHAND)
+    cpdefShorthand = Token(r'~\$=', TokenTypes.SHORTHAND, TokenTypes.CYTHON)
+    cdefShorthand = Token(r'\$=', TokenTypes.SHORTHAND, TokenTypes.CYTHON)
+    assertShorthand = Token(r'\?!', TokenTypes.SHORTHAND)
     defShorthand = Token(r':=', TokenTypes.SHORTHAND)
     inShorthand = Token(r'->', TokenTypes.SHORTHAND)
     notInShorthand = Token(r'!>', TokenTypes.SHORTHAND)
@@ -109,6 +113,9 @@ def ncompile(modified_code, indent_amount=1):
     notShorthand = Token(r'!(?!=)', TokenTypes.SHORTHAND)
     andDeconflict = Token(sclund('and'), TokenTypes.APPENDSUB)
     orDeconflict = Token(sclund('or'), TokenTypes.APPENDSUB)
+    assertDeconflict = Token(sclund('assert'), TokenTypes.APPENDSUB)
+    cpdefDeconflict = Token(sclund('cpdef'), TokenTypes.APPENDSUB, TokenTypes.CYTHON)
+    cdefDeconflict = Token(sclund('cdef'), TokenTypes.APPENDSUB, TokenTypes.CYTHON)
     notDeconflict = Token(sclund('not'), TokenTypes.APPENDSUB)
     isDeconflict = Token(sclund('is'), TokenTypes.APPENDSUB)
     defDeconflict = Token(sclund('def'), TokenTypes.APPENDSUB)
@@ -150,6 +157,9 @@ def ncompile(modified_code, indent_amount=1):
       Tokens.delShorthand.value.id: 'del',
       Tokens.incrementOperator.value.id: '+=1',
       Tokens.decrementOperator.value.id: '-=1',
+      Tokens.cpdefShorthand.value.id: 'cpdef',
+      Tokens.cdefShorthand.value.id: 'cdef',
+      Tokens.assertShorthand.value.id: 'assert',
       Tokens.intDiv.value.id: '//'
   }
 
@@ -207,7 +217,7 @@ def ncompile(modified_code, indent_amount=1):
 
   indent = ' ' * indent_amount
   buffer = 1
-  tokens = tokenize(modified_code, [t.value for t in Tokens], buffer)
+  tokens = tokenize(code, [t.value for t in Tokens if TokenTypes.CYTHON not in t.value.types or cythonic], buffer)
   compiling = True
   ptoken = Token()
   class breakout(Exception):
@@ -239,6 +249,7 @@ def ncompile(modified_code, indent_amount=1):
     nonlocal buffer
     nonlocal compiling
     nonlocal ptoken
+    nonlocal cythonic
     try:
      for n, token in enumerate(tokens):
       ptoken = tokens[n - 1] if n > 0 else bufferToken
@@ -369,5 +380,5 @@ pass\n{indent * indent_level}')
   return compiled_code
 
 
-def nexec(code):
-  exec(ncompile(code))
+def nexec(code:str, indent_amount:int=1, *, cythonic:bool=False):
+  exec(ncompile(code, indent_amount=indent_amount, cythonic=cythonic))
