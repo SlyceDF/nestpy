@@ -72,7 +72,7 @@ def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False):
   # TOKEN DECLARATIONS
 
   def sclund(regex):
-    return r'(?<![\w0-9])' + regex + r'_*(?![\w0-9])'
+    return r'\b' + regex + r'_*\b'
 
   macros = {}
 
@@ -88,7 +88,7 @@ def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False):
     indentLeftNoColon = Token(r'~{', TokenTypes.INDENTED,
       TokenTypes.SYNTACTICAL)
     indentLeftDouble = Token(r'{{')
-    indentSelfClose = Token(r'{\s*}', TokenTypes.INDENTED, TokenTypes.SYNTACTICAL)
+    indentSelfClose = Token(r'{(\s*(\/\*[\s\S]*?\*\/|(\/\/.*\n))?\s*)*}', TokenTypes.INDENTED, TokenTypes.SYNTACTICAL)
     indentLeft = Token(r'{', TokenTypes.INDENTED, TokenTypes.SYNTACTICAL)
     indentRight = Token(r'}', TokenTypes.INDENTED, TokenTypes.SYNTACTICAL)
     newline = Token(r'\n', TokenTypes.INDENTED, TokenTypes.MULTILINE)
@@ -325,7 +325,7 @@ pass\n{indent * indent_level}')
             compiled_code = compiled_code.rstrip()
             compiled_code += ((':' if token.id == Tokens.indentLeft.value.id 
                               else (
-                                f'\n{indent * (indent_level-1)}if True:'
+                                f'\n{indent * (indent_level-1)}while True:'
                               )) + '\n' + indent * indent_level
                              )
           case Tokens.indentRight.value.id:

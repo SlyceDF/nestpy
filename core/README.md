@@ -34,6 +34,22 @@ if (n % 2 == 0) {
 	print('n is odd')
 }
 ```
+
+## syntactical changes
+
+Several keywords are altered:
+
+|  Python  | nestPython |  Python  | nestPython |
+|:--------:|:----------:|:--------:|:----------:|
+|  `def`   |    `:=`    |  `del`   |    `~>`    |
+| `return` |    `=>`    |  `and`   |    `&&`    |
+|   `in`   |    `->`    |   `or`   |   `\|\|`   |
+| `not in` |    `!>`    |   `:=`   |    `<-`    |
+|   `is`   |    `=&`    | `assert` |    `?!`    |
+| `is not` |   `!=&`    |  `case`  |    `?`     |
+| `lambda` |    `;=`    |   `;`    |    `,,`    |
+
+
 *(to be continued)*
 
 ---
