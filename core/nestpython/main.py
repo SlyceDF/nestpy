@@ -105,6 +105,7 @@ def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False):
     cdefShorthand = Token(r'\$=', TokenTypes.SHORTHAND, TokenTypes.CYTHON)
     assertShorthand = Token(r'\?!', TokenTypes.SHORTHAND)
     defShorthand = Token(r':=', TokenTypes.SHORTHAND)
+    returntypeShorthand = Token(r'>:', TokenTypes.SHORTHAND)
     inShorthand = Token(r'->', TokenTypes.SHORTHAND)
     notInShorthand = Token(r'!>', TokenTypes.SHORTHAND)
     delShorthand = Token(r'~>', TokenTypes.SHORTHAND)
@@ -160,7 +161,8 @@ def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False):
       Tokens.cpdefShorthand.value.id: 'cpdef',
       Tokens.cdefShorthand.value.id: 'cdef',
       Tokens.assertShorthand.value.id: 'assert',
-      Tokens.intDiv.value.id: '//'
+      Tokens.intDiv.value.id: '//',
+      Tokens.returntypeShorthand.value.id: '->'
   }
 
   def isF(token, ptoken):
