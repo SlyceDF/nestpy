@@ -47,8 +47,8 @@ def ncompile_to(file:str, new_file:str=None, *, indent_amount:int=1, replace_pre
   def compile(file):
     print(f'> compiling {file}')
     with (
-      open(file, 'r') as f, 
-      open(new_file, 'w') as fn):
+      open(file, 'r', encoding='utf-8') as f,
+      open(new_file, 'w', encoding='utf-8') as fn):
         fn.write(_m.ncompile(f.read(), indent_amount=indent_amount, cythonic=cythonic))
   if not _path.isfile(new_file) or replace_previous:
     compile(file)
@@ -100,7 +100,7 @@ def nbuild(dir:str, new_dir:str, *, indent_amount:int=1, erase_dir:bool=None,
  subbuild()
 
 def ncompile(file:str, *, indent_amount:int=1):
-  with open(file, 'r') as f:
+  with open(file, 'r', encoding='utf-8') as f:
     return _m.ncompile(f.read(), indent_amount=indent_amount)
 
 def nexec(file:str, *, indent_amount:int=1):
