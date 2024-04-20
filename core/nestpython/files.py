@@ -31,7 +31,7 @@ def _getFilesDirs(dirPath):
     _chdir(oldDir)
     return a, b
 
-def _filterByFileExt(files, *fileExts:list[str]):
+def _filterByFileExt(files, *fileExts:str):
     passed = []
     failed = []
     for file in files:
@@ -85,7 +85,7 @@ def nbuild(dir:str, new_dir:str, *, indent_amount:int=1, erase_dir:bool=None,
 
     else:
       _mkdir(f'{new_dir}/{subpath}')
-    compilable, leaveBe = _filterByFileExt(_getFilesDirs(f'{dir}/{subpath}')[0], ['.npy', '.npx'])
+    compilable, leaveBe = _filterByFileExt(_getFilesDirs(f'{dir}/{subpath}')[0], '.npy', '.npx')
     for file in compilable:
       ncompile_to(f'{dir}/{subpath}/{file}', f'{new_dir}/{subpath}/{(fsplit := _path.splitext(file.rsplit("/", 1)[-1]))[0]}.py{"x" if fsplit[~0] == ".npx" else ""}',
                indent_amount=indent_amount, replace_previous=replace_previous)
