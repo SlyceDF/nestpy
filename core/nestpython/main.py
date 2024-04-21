@@ -1,4 +1,4 @@
-def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False):
+def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False, tokenlog:bool=False, filename:str=None):
 
   import contextlib
   import re
@@ -47,10 +47,17 @@ def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False):
   def anonToken(symb, *types):
     return Token(symb, *types, setID=-1)
 
-  def tokenize(string, tokens: list[Token], buffer):
+  def tokenize(string, tokens: list[Token], buffer, tokenlog, filename):
     tokenized = []
     i = 0
     j = 0
+    def update(token):
+      nonlocal tokenized
+      nonlocal string
+      nonlocal tokenlog
+      tokenized.append(token)
+      if tokenlog:
+        print(f'{len(tokenized)} tokens, {round(sum(len(t.symb) for t in tokenized) / len(string) * 100, 2):.2f}% of string{f" {filename}" if filename is not None else ""}')
     while i + j < len(string):
       for token in tokens:
         F = (i + j - buffer >= 0)
@@ -59,14 +66,14 @@ def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False):
             string[i + j - buffer:] if F else string, re.M):
           match_string = match.group()[buffer:] if F else match.group()
           if string[i:i + j] != '':
-            tokenized.append(anonToken(string[i:i + j]))
-          tokenized.append(Token(match_string, token.types, setID=token.id))
+            update(anonToken(string[i:i + j]))
+          update(Token(match_string, token.types, setID=token.id))
           i += j + len(match_string)
           j = -1
           break
       j += 1
     if i < len(string):
-      tokenized.append(anonToken(string[i:]))
+      update(anonToken(string[i:]))
     return tokenized
 
   # TOKEN DECLARATIONS
@@ -86,7 +93,8 @@ def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False):
     dictIndentLeft = Token(r'-{', TokenTypes.MAP)
     dictIndentRight = Token(r'}-', TokenTypes.MAP)
     indentLeftDouble = Token(r'{{')
-    indentSelfClose = Token(r'~?{(\s*(\/\*[\s\S]*?\*\/|(\/\/.*\n))?\s*)*}', TokenTypes.INDENTED, TokenTypes.SYNTACTICAL)
+    indentSelfClose = Token(r'{\s*(\/\/.*\n\s*|\/\*[\s\S]\*\/\s*)*}', TokenTypes.INDENTED, TokenTypes.SYNTACTICAL)
+    indentNoColonSelfClose = Token(r'~{\s*(\/\/.*\n\s*|\/\*[\s\S]\*\/\s*)*}', TokenTypes.INDENTED, TokenTypes.SYNTACTICAL)
     indentLeftNoColon = Token(r'~{', TokenTypes.INDENTED, TokenTypes.SYNTACTICAL)
     indentLeft = Token(r'{', TokenTypes.INDENTED, TokenTypes.SYNTACTICAL)
     indentRight = Token(r'}', TokenTypes.INDENTED, TokenTypes.SYNTACTICAL)
@@ -218,7 +226,7 @@ def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False):
 
   indent = ' ' * indent_amount
   buffer = 1
-  tokens = tokenize(code, [t.value for t in Tokens if TokenTypes.CYTHON not in t.value.types or cythonic], buffer)
+  tokens = tokenize(code, [t.value for t in Tokens if TokenTypes.CYTHON not in t.value.types or cythonic], buffer, tokenlog, filename)
   compiling = True
   ptoken = Token()
   class breakout(Exception):
@@ -381,5 +389,5 @@ pass\n{indent * indent_level}')
   return compiled_code
 
 
-def nexec(code:str, indent_amount:int=1, *, cythonic:bool=False):
-  exec(ncompile(code, indent_amount=indent_amount, cythonic=cythonic))
+def nexec(code:str, indent_amount:int=1, *, cythonic:bool=False, tokenlog:bool=False, filename:str=None):
+  exec(ncompile(code, indent_amount=indent_amount, cythonic=cythonic, tokenlog=tokenlog, filename=filename))

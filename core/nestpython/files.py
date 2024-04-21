@@ -41,7 +41,7 @@ def _filterByFileExt(files, *fileExts:str):
         failed.append(file)
     return passed, failed
 
-def ncompile_to(file:str, new_file:str=None, *, indent_amount:int=1, replace_previous:bool=False, cythonic:bool=None):
+def ncompile_to(file:str, new_file:str=None, *, indent_amount:int=1, replace_previous:bool=False, cythonic:bool=None, tokenlog:bool=False):
   cythonic = _path.splitext(file)[~0] == '.npx' if cythonic is None else cythonic
   new_file = f'{_path.splitext(file)[0]}.py{"x" if cythonic else ""}' if new_file is None else new_file
   def compile(file):
@@ -49,7 +49,7 @@ def ncompile_to(file:str, new_file:str=None, *, indent_amount:int=1, replace_pre
     with (
       open(file, 'r', encoding='utf-8') as f,
       open(new_file, 'w', encoding='utf-8') as fn):
-        fn.write(_m.ncompile(f.read(), indent_amount=indent_amount, cythonic=cythonic))
+        fn.write(_m.ncompile(f.read(), indent_amount=indent_amount, cythonic=cythonic, tokenlog=tokenlog, filename=file))
   if not _path.isfile(new_file) or replace_previous:
     compile(file)
   else:
@@ -99,9 +99,10 @@ def nbuild(dir:str, new_dir:str, *, indent_amount:int=1, erase_dir:bool=None,
 
  subbuild()
 
-def ncompile(file:str, *, indent_amount:int=1):
+def ncompile(file:str, *, indent_amount:int=1, cythonic:bool=None, tokenlog:bool=None):
+  cythonic = _path.splitext(file)[~0] == '.npx' if cythonic is None else cythonic
   with open(file, 'r', encoding='utf-8') as f:
-    return _m.ncompile(f.read(), indent_amount=indent_amount)
+    return _m.ncompile(f.read(), indent_amount=indent_amount, cythonic=cythonic, tokenlog=tokenlog, filename=file)
 
-def nexec(file:str, *, indent_amount:int=1):
-  exec(ncompile(file, indent_amount=indent_amount))
+def nexec(file:str, *, indent_amount:int=1, cythonic:bool=None, tokenlog:bool=None):
+  exec(ncompile(file, indent_amount=indent_amount, cythonic=cythonic, tokenlog=tokenlog))
