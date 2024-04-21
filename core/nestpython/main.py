@@ -349,9 +349,6 @@ pass\n{indent * indent_level}')
         fstring_nesting -= 1
         in_fstring = True
         in_string = True
-        compiled_code += token.symb
-        tokens = tokens[n + 1:]
-        raise breakout
 
       elif in_fstring:
         match token.id:
@@ -365,10 +362,6 @@ pass\n{indent * indent_level}')
               compiled_code += token.symb * 2
               tokens = tokens[n+2:]
               raise breakout
-      elif in_string and token.id == Tokens.indentRight.value.id:
-        compiled_code += token.symb
-        tokens = tokens[n+1:]
-        raise breakout
       if (not (TokenTypes.SYNTACTICAL in token.types and compilable())
           and not (TokenTypes.MULTILINE in token.types and not in_multilineString())):
         
@@ -384,8 +377,8 @@ pass\n{indent * indent_level}')
                 compiled_code += ' '
         compiled_code += (mtoken.lstrip() if
                           ((TokenTypes.INDENTED
-                          in ptoken.types) 
-                          or (TokenTypes.SHORTHAND in ptoken.types) 
+                          in ptoken.types
+                          or (TokenTypes.SHORTHAND in ptoken.types))
                           and compilable()) else mtoken)
      compiled_code += '\n'
      compiling = False
