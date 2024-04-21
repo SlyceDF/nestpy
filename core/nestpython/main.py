@@ -349,6 +349,9 @@ pass\n{indent * indent_level}')
         fstring_nesting -= 1
         in_fstring = True
         in_string = True
+        compiled_code += token.symb
+        tokens = tokens[n + 1:]
+        raise breakout
 
       elif in_fstring:
         match token.id:
