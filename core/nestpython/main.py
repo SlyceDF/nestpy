@@ -365,6 +365,10 @@ pass\n{indent * indent_level}')
               compiled_code += token.symb * 2
               tokens = tokens[n+2:]
               raise breakout
+      elif in_string and token.id == Tokens.indentRight.value.id:
+        compiled_code += token.symb
+        tokens = tokens[n+1:]
+        raise breakout
       if (not (TokenTypes.SYNTACTICAL in token.types and compilable())
           and not (TokenTypes.MULTILINE in token.types and not in_multilineString())):
         
