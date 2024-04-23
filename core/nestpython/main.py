@@ -47,7 +47,12 @@ def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False, tokenlog:boo
   def anonToken(symb, *types):
     return Token(symb, *types, setID=-1)
 
+  tokens_parsed = 0
+  string_parsed = 0
+
   def tokenize(string, tokens: list[Token], buffer, tokenlog, filename):
+    nonlocal string_parsed
+    nonlocal tokens_parsed
     tokenized = []
     i = 0
     j = 0
@@ -55,9 +60,13 @@ def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False, tokenlog:boo
       nonlocal tokenized
       nonlocal string
       nonlocal tokenlog
+      nonlocal string_parsed
+      nonlocal tokens_parsed
       tokenized.append(token)
+      string_parsed += len(token.symb)
+      tokens_parsed += 1
       if tokenlog:
-        print(f'{len(tokenized)} tokens, {round(sum(len(t.symb) for t in tokenized) / len(string) * 100, 2):.2f}% of string{f" {filename}" if filename is not None else ""}')
+        print(f'tokenmatch \u2116{tokens_parsed}; {string_parsed / len(string) * 100:.2f}% of string{f" {filename}" if filename is not None else ""} parsed')
     while i + j < len(string):
       for token in tokens:
         F = (i + j - buffer >= 0)
@@ -84,8 +93,9 @@ def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False, tokenlog:boo
   macros = {}
 
   class Tokens(Enum):
-    escape = Token(r'\\', TokenTypes.ESCAPEMENT)
     escapeEscaped = Token(r'\\\\', TokenTypes.ESCAPEMENT)
+    escapeNewline = Token(r'\\\n')
+    escape = Token(r'\\', TokenTypes.ESCAPEMENT)
     multilineStringDouble = Token(r'(?<!\\)"""', TokenTypes.STRING)
     multilineStringSingle = Token(r"(?<!\\)'''", TokenTypes.STRING)
     stringDouble = Token(r'"', TokenTypes.STRING)
@@ -269,8 +279,8 @@ def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False, tokenlog:boo
           case Tokens.lineStatement.value.id:
             compiled_code += '#' + token.symb[2:-2].rstrip() + '\n' + indent * indent_level
             continue
-      if isNRawEscapedEscape(token):
-        compiled_code += '\\'
+      if in_string and not in_multilineString() and token.id == Tokens.escapeNewline:
+        continue
       if (token.id == Tokens.indentLeftDouble.value.id 
           and not in_fstring):
         tokens = [Tokens.indentLeft.value]*2 + tokens[n + 1:]
@@ -283,7 +293,7 @@ pass\n{indent * indent_level}')
           continue
         else:
           tokens = ([Tokens.indentLeft.value] 
-          + tokenize(token.symb[1:-1], [t.value for t in Tokens], buffer) 
+          + tokenize(token.symb[1:-1], [t.value for t in Tokens], buffer, tokenlog=tokenlog, filename=filename)
           + [Tokens.indentRight.value]
           + tokens[n + 1:])
           raise breakout
@@ -316,7 +326,7 @@ pass\n{indent * indent_level}')
         case Tokens.macroAccess.value.id:
           if compilable():
             macro = macros[token.symb[1:].replace('\n', '')][0]
-            tokens = tokenize(macro, [t.value for t in Tokens], buffer) + tokens[n + 1:]
+            tokens = tokenize(macro, [t.value for t in Tokens], buffer, tokenlog=tokenlog, filename=filename) + tokens[n + 1:]
             raise breakout
           else:
             compiled_code += (token.symb if in_multilineString() 

@@ -67,6 +67,35 @@ Cython keywords are also altered for `.npx`:
 | `cdef`  |    `$=`    |
 | `cpdef` |   `~$=`    |
 
+Strings or ternaries do not have to be one-line, but if they are not, you can use `\ ` and `#` like the following.
+```
+'string \
+continues here'
+```
+
+is equivalent to
+
+```
+'string continues here'
+```
+
+and compiles to a python string with newl
+This is useful to make it clear that there is a space before the newline character. The backspace is simply ignored by the compiler.
+
+Same thing can be done with code and the `#` character:
+
+```nestpython
+a if b #
+else c
+```
+is equivalent to
+```nestpython
+a if b else c
+```
+
+The `#` is ignored by the compiler.
+
+
 ## comments
 
 - For block comments, use `/*`, `*/`.
