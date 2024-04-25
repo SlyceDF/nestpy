@@ -74,10 +74,9 @@ def nbuild(dir:str, new_dir:str, *, indent_amount:int=1, erase_dir:bool=None,
       def remove():
         _rmtree(f'{new_dir}/{subpath}')
         _mkdir(f'{new_dir}/{subpath}')
-      match erase_dir:
-        case True:
+      if erase_dir:
           remove()
-        case None:
+      elif erase_dir is None:
           i = input(
             f'Directory \'{new_dir}/{subpath}\' already exists. Would you like to erase it? [y/(n)]: ')
           if i.lower() == 'y':
@@ -99,10 +98,10 @@ def nbuild(dir:str, new_dir:str, *, indent_amount:int=1, erase_dir:bool=None,
 
  subbuild()
 
-def ncompile(file:str, *, indent_amount:int=1, cythonic:bool=None, tokenlog:bool=None):
+def ncompile(file:str, *, indent_amount:int=1, cythonic:bool=None, tokenlog:bool=False):
   cythonic = _path.splitext(file)[~0] == '.npx' if cythonic is None else cythonic
   with open(file, 'r', encoding='utf-8') as f:
     return _m.ncompile(f.read(), indent_amount=indent_amount, cythonic=cythonic, tokenlog=tokenlog, filename=file)
 
-def nexec(file:str, *, indent_amount:int=1, cythonic:bool=None, tokenlog:bool=None):
+def nexec(file:str, *, indent_amount:int=1, cythonic:bool=None, tokenlog:bool=False):
   exec(ncompile(file, indent_amount=indent_amount, cythonic=cythonic, tokenlog=tokenlog))
