@@ -92,9 +92,9 @@ def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False, tokenlog:boo
 
   macros = {}
 
-  class Tokens(Enum):
+  class Tokens():
     escapeEscaped = Token(r'\\\\', TokenTypes.ESCAPEMENT)
-    escapeNewline = Token(r'\\\n')
+    escapeNewline = Token(r'\\\n', TokenTypes.INDENTED)
     escape = Token(r'\\', TokenTypes.ESCAPEMENT)
     multilineStringDouble = Token(r'(?<!\\)"""', TokenTypes.STRING)
     multilineStringSingle = Token(r"(?<!\\)'''", TokenTypes.STRING)
@@ -157,29 +157,29 @@ def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False, tokenlog:boo
     # CONVERSION TOKEN MAPPING
 
   tokenMap = {
-      Tokens.dictIndentLeft.value.id: '{',
-      Tokens.dictIndentRight.value.id: '}',
-      Tokens.nativeSemicolon.value.id: ';',
-      Tokens.nativeAssignment.value.id: ':=',
-      Tokens.andShorthand.value.id: 'and',
-      Tokens.orShorthand.value.id: 'or',
-      Tokens.notShorthand.value.id: 'not',
-      Tokens.isShorthand.value.id: 'is',
-      Tokens.isNotShorthand.value.id: 'is not',
-      Tokens.defShorthand.value.id: 'def',
-      Tokens.inShorthand.value.id: 'in',
-      Tokens.caseShorthand.value.id: 'case',
-      Tokens.notInShorthand.value.id: 'not in',
-      Tokens.returnShorthand.value.id: 'return',
-      Tokens.lambdaShorthand.value.id: 'lambda',
-      Tokens.delShorthand.value.id: 'del',
-      Tokens.incrementOperator.value.id: '+=1',
-      Tokens.decrementOperator.value.id: '-=1',
-      Tokens.cpdefShorthand.value.id: 'cpdef',
-      Tokens.cdefShorthand.value.id: 'cdef',
-      Tokens.yieldShorthand.value.id: 'yield',
-      Tokens.intDiv.value.id: '//',
-      Tokens.returntypeShorthand.value.id: '->'
+      Tokens.dictIndentLeft.id: '{',
+      Tokens.dictIndentRight.id: '}',
+      Tokens.nativeSemicolon.id: ';',
+      Tokens.nativeAssignment.id: ':=',
+      Tokens.andShorthand.id: 'and',
+      Tokens.orShorthand.id: 'or',
+      Tokens.notShorthand.id: 'not',
+      Tokens.isShorthand.id: 'is',
+      Tokens.isNotShorthand.id: 'is not',
+      Tokens.defShorthand.id: 'def',
+      Tokens.inShorthand.id: 'in',
+      Tokens.caseShorthand.id: 'case',
+      Tokens.notInShorthand.id: 'not in',
+      Tokens.returnShorthand.id: 'return',
+      Tokens.lambdaShorthand.id: 'lambda',
+      Tokens.delShorthand.id: 'del',
+      Tokens.incrementOperator.id: '+=1',
+      Tokens.decrementOperator.id: '-=1',
+      Tokens.cpdefShorthand.id: 'cpdef',
+      Tokens.cdefShorthand.id: 'cdef',
+      Tokens.yieldShorthand.id: 'yield',
+      Tokens.intDiv.id: '//',
+      Tokens.returntypeShorthand.id: '->'
   }
 
   def isF(token, ptoken):
@@ -194,11 +194,11 @@ def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False, tokenlog:boo
 
   def isEscape(token):
     with contextlib.suppress(TypeError):
-      return (token.id == Tokens.escape.value.id and not compilable())
+      return (token.id == Tokens.escape.id and not compilable())
 
   def isEscapedEscape(token):
     with contextlib.suppress(TypeError):
-      return (token.id == Tokens.escapeEscaped.value.id and not compilable())
+      return token.id == Tokens.escapeEscaped.id and not compilable()
 
   def isNRawEscape(token):
     return isEscape(token) and not in_rstring
@@ -212,31 +212,32 @@ def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False, tokenlog:boo
   def getStringType():
     return anonToken('') if len(string_nesting) == 0 else string_nesting[~0]
   fstring_nesting = 0
-  in_multilineStringSingle = lambda: getStringType().id == Tokens.multilineStringSingle.value.id and in_string
-  in_multilineStringDouble = lambda: getStringType().id == Tokens.multilineStringDouble.value.id and in_string
-  in_stringSingle = lambda: getStringType().id == Tokens.stringSingle.value.id and in_string
-  in_stringDouble = lambda: getStringType().id == Tokens.stringDouble.value.id and in_string
+  in_multilineStringSingle = lambda: getStringType().id == Tokens.multilineStringSingle.id and in_string
+  in_multilineStringDouble = lambda: getStringType().id == Tokens.multilineStringDouble.id and in_string
+  in_stringSingle = lambda: getStringType().id == Tokens.stringSingle.id and in_string
+  in_stringDouble = lambda: getStringType().id == Tokens.stringDouble.id and in_string
   in_fstring = False
   in_rstring = False
   in_multilineString = lambda: (in_multilineStringSingle() or
                                 in_multilineStringDouble())
   in_string = False
   compilable = lambda: not in_string
+  tokenList = lambda: [t for t in [k for h, k in Tokens.__dict__.items() if not h.startswith('__')] if TokenTypes.CYTHON not in t.types or cythonic]
 
   def string_compilable(token):
     match token.id:
-      case Tokens.multilineStringSingle.value.id:
+      case Tokens.multilineStringSingle.id:
         return not in_multilineStringDouble()
-      case Tokens.multilineStringDouble.value.id:
+      case Tokens.multilineStringDouble.id:
         return not in_multilineStringSingle()
-      case Tokens.stringSingle.value.id:
+      case Tokens.stringSingle.id:
         return not (in_multilineString() or in_stringDouble())
-      case Tokens.stringDouble.value.id:
+      case Tokens.stringDouble.id:
         return not (in_multilineString() or in_stringSingle())
 
   indent = ' ' * indent_amount
   buffer = 1
-  tokens = tokenize(code, [t.value for t in Tokens if TokenTypes.CYTHON not in t.value.types or cythonic], buffer, tokenlog, filename)
+  tokens = tokenize(code, tokenList(), buffer, tokenlog, filename)
   compiling = True
   ptoken = Token()
   class breakout(Exception):
@@ -274,38 +275,38 @@ def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False, tokenlog:boo
       ptoken = tokens[n - 1] if n > 0 else bufferToken
       if compilable():
         match token.id:
-          case Tokens.comment.value.id | Tokens.lineComment.value.id:
+          case Tokens.comment.id | Tokens.lineComment.id:
             continue
-          case Tokens.lineStatement.value.id:
+          case Tokens.lineStatement.id:
             compiled_code += '#' + token.symb[2:-2].rstrip() + '\n' + indent * indent_level
             continue
       if in_string and not in_multilineString() and token.id == Tokens.escapeNewline:
         continue
-      if (token.id == Tokens.indentLeftDouble.value.id 
+      if (token.id == Tokens.indentLeftDouble.id
           and not in_fstring):
-        tokens = [Tokens.indentLeft.value]*2 + tokens[n + 1:]
+        tokens = [Tokens.indentLeft]*2 + tokens[n + 1:]
         raise breakout
-      if token.id == Tokens.indentSelfClose.value.id:
+      if token.id == Tokens.indentSelfClose.id:
         if compilable():
           compiled_code = (compiled_code.rstrip()
                            + f':\n{indent * (indent_level+1)}\
 pass\n{indent * indent_level}')
           continue
         else:
-          tokens = ([Tokens.indentLeft.value] 
-          + tokenize(token.symb[1:-1], [t.value for t in Tokens], buffer, tokenlog=tokenlog, filename=filename)
-          + [Tokens.indentRight.value]
+          tokens = ([Tokens.indentLeft]
+          + tokenize(token.symb[1:-1], tokenList(), buffer, tokenlog=tokenlog, filename=filename)
+          + [Tokens.indentRight]
           + tokens[n + 1:])
           raise breakout
       if TokenTypes.MACROS in token.types and compilable():
        match token.id:
-        case Tokens.macroDefine.value.id:
+        case Tokens.macroDefine.id:
           macro = token.symb.split('#', 2)[1].strip().replace('\n', '')
           sub = token.symb.split('#', 2)[2][:~0].strip()[1:-1]
           
           macros.update({macro: (sub, indent_level)})
           continue
-        case Tokens.macroUndefine.value.id:
+        case Tokens.macroUndefine.id:
           macro = token.symb.split('#')[1][1:-1].strip().replace('\n', '')
           if macros[macro][1] == indent_level:
             macros.pop(macro)
@@ -314,7 +315,7 @@ pass\n{indent * indent_level}')
               f'nesting level {indent_level} does not \
               match macro\'s {macros[macro][1]}'
             )
-        case Tokens.macroIfdef.value.id:
+        case Tokens.macroIfdef.id:
           macro = token.symb.split('#')[1][1:-1].strip().replace('\n', '')
           truth = False
           if macro in macros:
@@ -323,10 +324,10 @@ pass\n{indent * indent_level}')
             compiled_code += ' '
           compiled_code += str(truth) + ' '
           continue
-        case Tokens.macroAccess.value.id:
+        case Tokens.macroAccess.id:
           if compilable():
             macro = macros[token.symb[1:].replace('\n', '')][0]
-            tokens = tokenize(macro, [t.value for t in Tokens], buffer, tokenlog=tokenlog, filename=filename) + tokens[n + 1:]
+            tokens = tokenize(macro, tokenList(), buffer, tokenlog=tokenlog, filename=filename) + tokens[n + 1:]
             raise breakout
           else:
             compiled_code += (token.symb if in_multilineString() 
@@ -339,35 +340,35 @@ pass\n{indent * indent_level}')
       if compilable():
        if fstring_nesting == 0:
         match token.id:
-          case Tokens.indentLeft.value.id | Tokens.indentLeftNoColon.value.id:
+          case Tokens.indentLeft.id | Tokens.indentLeftNoColon.id:
             indent_level += 1
             compiled_code = compiled_code.rstrip()
-            compiled_code += ((':' if token.id == Tokens.indentLeft.value.id 
+            compiled_code += ((':' if token.id == Tokens.indentLeft.id
                               else (
                                 f'\n{indent * (indent_level-1)}while True:'
                               )) + '\n' + indent * indent_level
                              )
-          case Tokens.indentRight.value.id:
+          case Tokens.indentRight.id:
             indent_level -= 1
             for macro in list(macros):
               if macros[macro][1] > indent_level:
                 macros.pop(macro)
             compiled_code += '\n' + indent * indent_level
-          case Tokens.indentNewline.value.id:
+          case Tokens.indentNewline.id:
             compiled_code += '\n' + indent * indent_level
-       elif token.id == Tokens.indentRight.value.id:
+       elif token.id == Tokens.indentRight.id:
         fstring_nesting -= 1
         in_fstring = True
         in_string = True
 
       elif in_fstring:
         match token.id:
-          case Tokens.indentLeft.value.id:
+          case Tokens.indentLeft.id:
             in_fstring = False
             in_string = False
             fstring_nesting += 1
             compiled_code += token.symb
-          case Tokens.indentRight.value.id:
+          case Tokens.indentRight.id:
             if tokens[n+1].id == token.id:
               compiled_code += token.symb * 2
               tokens = tokens[n+2:]
@@ -385,11 +386,21 @@ pass\n{indent * indent_level}')
             if compiled_code != '':
               if compiled_code[~0] != ' ' and compiled_code[~0] != '\n':
                 compiled_code += ' '
-        compiled_code += (mtoken.lstrip() if
-                          ((TokenTypes.INDENTED
-                          in ptoken.types
-                          or (TokenTypes.SHORTHAND in ptoken.types))
-                          and compilable()) else mtoken)
+        compiled_code += (mtoken.lstrip() if (
+                             (
+                               TokenTypes.INDENTED
+                               in ptoken.types
+                               and (compilable()
+                               or not in_multilineString()
+                             )
+                           ) or (
+                             TokenTypes.SHORTHAND in ptoken.types
+                             and compilable()
+                             )
+                           ) else (
+                             mtoken
+                           )
+                         )
      compiled_code += '\n'
      compiling = False
     except breakout:
