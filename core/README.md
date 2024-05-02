@@ -43,19 +43,18 @@ Use `~{` as a shorthand for `while True {`.
 
 Several keywords are altered:
 
-|  Python  | nestPython |  Python  | nestPython |
-|:--------:|:----------:|:--------:|:----------:|
-|  `def`   |    `:=`    |  `del`   |    `~>`    |
-| `return` |    `=>`    |  `and`   |    `&&`    |
-|   `in`   |    `->`    |   `or`   |   `\|\|`   |
-| `not in` |    `!>`    |   `:=`   |    `<-`    |
-|   `is`   |    `=&`    | `assert` |    `?!`    |
-| `is not` |   `!=&`    |  `case`  |    `?`     |
-| `lambda` |    `;=`    |   `;`    |    `,,`    |
-|   `->`   |    `>:`    |   `//`   |    `~/`    |
-|  `+= 1`  |    `++`    |  `-= 1`  |    `--`    |
-|   `{`    |    `-{`    |   `}`    |    `}-`    |
-
+|  Python  | nestPython | Python  | nestPython |
+|:--------:|:----------:|:-------:|:----------:|
+|  `def`   |    `:=`    |  `del`  |    `~>`    |
+| `return` |    `=>`    | `yield` |    `:>`    |
+|   `in`   |    `->`    |  `and`  |    `&&`    |
+| `not in` |    `!>`    |  `or`   |   `\|\|`   |
+|   `is`   |    `=&`    |  `:=`   |    `<-`    |
+| `is not` |   `!=&`    | `case`  |    `?`     |
+| `lambda` |    `;=`    |   `;`   |    `,,`    |
+|   `->`   |    `>:`    |  `//`   |    `~/`    |
+|  `+= 1`  |    `++`    | `-= 1`  |    `--`    |
+|   `{`    |    `-{`    |   `}`   |    `}-`    |
 
 A variable like `return` will be replaced with `return_` on transpilation. `pass` is not required: simply use `{}`. 
 Note that one-liner functions can still be written with colons: `:= foo(): => bar`

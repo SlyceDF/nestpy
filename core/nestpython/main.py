@@ -110,6 +110,7 @@ def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False, tokenlog:boo
     indentRight = Token(r'}', TokenTypes.INDENTED, TokenTypes.SYNTACTICAL)
     newline = Token(r'\n', TokenTypes.INDENTED, TokenTypes.MULTILINE)
     returnShorthand = Token(r'=>', TokenTypes.SHORTHAND)
+    yieldShorthand = Token(r':>', TokenTypes.SHORTHAND)
     nativeSemicolon = Token(r',,', TokenTypes.MAP)
     nativeAssignment = Token(r'<-', TokenTypes.MAP)
     incrementOperator = Token(r'\+\+', TokenTypes.MAP)
@@ -120,7 +121,6 @@ def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False, tokenlog:boo
     isNotShorthand = Token(r'!=&', TokenTypes.SHORTHAND)
     cpdefShorthand = Token(r'~\$=', TokenTypes.SHORTHAND, TokenTypes.CYTHON)
     cdefShorthand = Token(r'\$=', TokenTypes.SHORTHAND, TokenTypes.CYTHON)
-    assertShorthand = Token(r'\?!', TokenTypes.SHORTHAND)
     defShorthand = Token(r':=(?!>)', TokenTypes.SHORTHAND)
     returntypeShorthand = Token(r'>:', TokenTypes.SHORTHAND)
     inShorthand = Token(r'->', TokenTypes.SHORTHAND)
@@ -131,7 +131,6 @@ def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False, tokenlog:boo
     notShorthand = Token(r'!(?!=)', TokenTypes.SHORTHAND)
     andDeconflict = Token(sclund('and'), TokenTypes.APPENDSUB)
     orDeconflict = Token(sclund('or'), TokenTypes.APPENDSUB)
-    assertDeconflict = Token(sclund('assert'), TokenTypes.APPENDSUB)
     cpdefDeconflict = Token(sclund('cpdef'), TokenTypes.APPENDSUB, TokenTypes.CYTHON)
     cdefDeconflict = Token(sclund('cdef'), TokenTypes.APPENDSUB, TokenTypes.CYTHON)
     notDeconflict = Token(sclund('not'), TokenTypes.APPENDSUB)
@@ -140,6 +139,7 @@ def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False, tokenlog:boo
     lambdaDeconflict = Token(sclund('lambda'), TokenTypes.APPENDSUB)
     inDeconflict = Token(sclund('in'), TokenTypes.APPENDSUB)
     returnDeconflict = Token(sclund('return'), TokenTypes.APPENDSUB)
+    yieldDeconflict = Token(sclund('yield'), TokenTypes.APPENDSUB)
     caseDeconflict = Token(sclund('case'), TokenTypes.APPENDSUB)
     delDeconflict = Token(sclund('del'), TokenTypes.APPENDSUB)
     passDeconflict = Token(sclund('pass'), TokenTypes.APPENDSUB)
@@ -177,7 +177,7 @@ def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False, tokenlog:boo
       Tokens.decrementOperator.value.id: '-=1',
       Tokens.cpdefShorthand.value.id: 'cpdef',
       Tokens.cdefShorthand.value.id: 'cdef',
-      Tokens.assertShorthand.value.id: 'assert',
+      Tokens.yieldShorthand.value.id: 'yield',
       Tokens.intDiv.value.id: '//',
       Tokens.returntypeShorthand.value.id: '->'
   }
