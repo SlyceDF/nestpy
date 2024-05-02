@@ -121,7 +121,7 @@ def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False, tokenlog:boo
     cpdefShorthand = Token(r'~\$=', TokenTypes.SHORTHAND, TokenTypes.CYTHON)
     cdefShorthand = Token(r'\$=', TokenTypes.SHORTHAND, TokenTypes.CYTHON)
     assertShorthand = Token(r'\?!', TokenTypes.SHORTHAND)
-    defShorthand = Token(r':=', TokenTypes.SHORTHAND)
+    defShorthand = Token(r':=(?!>)', TokenTypes.SHORTHAND)
     returntypeShorthand = Token(r'>:', TokenTypes.SHORTHAND)
     inShorthand = Token(r'->', TokenTypes.SHORTHAND)
     notInShorthand = Token(r'!>', TokenTypes.SHORTHAND)
