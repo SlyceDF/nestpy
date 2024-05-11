@@ -253,7 +253,7 @@ def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False, tokenlog:boo
 
   def compile(bufferToken):
     nonlocal compiled_code
-    nonlocal indent_level 
+    nonlocal indent_level
     nonlocal in_multilineStringSingle
     nonlocal in_multilineStringDouble
     nonlocal in_stringSingle
@@ -303,7 +303,7 @@ pass\n{indent * indent_level}')
         case Tokens.macroDefine.id:
           macro = token.symb.split('#', 2)[1].strip().replace('\n', '')
           sub = token.symb.split('#', 2)[2][:~0].strip()[1:-1]
-          
+
           macros.update({macro: (sub, indent_level)})
           continue
         case Tokens.macroUndefine.id:
@@ -330,7 +330,7 @@ pass\n{indent * indent_level}')
             tokens = tokenize(macro, tokenList(), buffer, tokenlog=tokenlog, filename=filename) + tokens[n + 1:]
             raise breakout
           else:
-            compiled_code += (token.symb if in_multilineString() 
+            compiled_code += (token.symb if in_multilineString()
                               else token.symb.replace('\n', ''))
       if TokenTypes.STRING in token.types and string_compilable(token):
         if not isNRawEscape(ptoken):
@@ -375,7 +375,7 @@ pass\n{indent * indent_level}')
               raise breakout
       if (not (TokenTypes.SYNTACTICAL in token.types and compilable())
           and not (TokenTypes.MULTILINE in token.types and not in_multilineString())):
-        
+
         mtoken = tokenMap[token.id] if (TokenTypes.MAP in token.types
                                         and compilable()) else token.symb
         if compilable():
@@ -391,7 +391,10 @@ pass\n{indent * indent_level}')
                                TokenTypes.INDENTED
                                in ptoken.types
                                and (compilable()
-                               or not in_multilineString()
+                               or (
+                                 not in_multilineString()
+                                 and ptoken.id == Tokens.escapeNewline.id
+                               )
                              )
                            ) or (
                              TokenTypes.SHORTHAND in ptoken.types
