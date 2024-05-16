@@ -23,7 +23,7 @@ def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False, tokenlog:boo
     'SYNTACTICAL', 'MULTILINE',
     'INDENTED', 'MAP', 'CYTHON',
     'STRING', 'APPENDSUB', 'SHORTHAND',
-    'MACROS', 'ESCAPEMENT'
+    'MACROS', 'ESCAPEMENT', 'NEWLINELIKE'
   ])
 
   id = 0
@@ -92,9 +92,9 @@ def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False, tokenlog:boo
 
   macros = {}
 
-  class Tokens():
+  class Tokens:
     escapeEscaped = Token(r'\\\\', TokenTypes.ESCAPEMENT)
-    escapeNewline = Token(r'\\\n', TokenTypes.INDENTED)
+    escapeNewline = Token(r'\\\n', TokenTypes.INDENTED, TokenTypes.NEWLINELIKE)
     escape = Token(r'\\', TokenTypes.ESCAPEMENT)
     multilineStringDouble = Token(r'(?<!\\)"""', TokenTypes.STRING)
     multilineStringSingle = Token(r"(?<!\\)'''", TokenTypes.STRING)
@@ -108,7 +108,7 @@ def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False, tokenlog:boo
     indentLeftNoColon = Token(r'~{', TokenTypes.INDENTED, TokenTypes.SYNTACTICAL)
     indentLeft = Token(r'{', TokenTypes.INDENTED, TokenTypes.SYNTACTICAL)
     indentRight = Token(r'}', TokenTypes.INDENTED, TokenTypes.SYNTACTICAL)
-    newline = Token(r'\n', TokenTypes.INDENTED, TokenTypes.MULTILINE)
+    newline = Token(r'\n', TokenTypes.INDENTED, TokenTypes.MULTILINE, TokenTypes.NEWLINELIKE)
     returnShorthand = Token(r'=>', TokenTypes.SHORTHAND)
     yieldShorthand = Token(r':>', TokenTypes.SHORTHAND)
     nativeSemicolon = Token(r',,', TokenTypes.MAP)
@@ -280,7 +280,7 @@ def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False, tokenlog:boo
           case Tokens.lineStatement.id:
             compiled_code += '#' + token.symb[2:-2].rstrip() + '\n' + indent * indent_level
             continue
-      if in_string and not in_multilineString() and token.id == Tokens.escapeNewline:
+      if in_string and not in_multilineString() and token.id == Tokens.escapeNewline.id:
         continue
       if (token.id == Tokens.indentLeftDouble.id
           and not in_fstring):
@@ -387,14 +387,14 @@ pass\n{indent * indent_level}')
               if compiled_code[~0] != ' ' and compiled_code[~0] != '\n':
                 compiled_code += ' '
         compiled_code += (mtoken.lstrip() if (
+                           (
                              (
                                TokenTypes.INDENTED
                                in ptoken.types
-                               and (compilable()
-                               or (
-                                 not in_multilineString()
-                                 and ptoken.id == Tokens.escapeNewline.id
-                               )
+                               and compilable()
+                             ) or (
+                               not in_multilineString()
+                               and TokenTypes.NEWLINELIKE in ptoken.types
                              )
                            ) or (
                              TokenTypes.SHORTHAND in ptoken.types
