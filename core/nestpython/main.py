@@ -1,5 +1,4 @@
 def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False, tokenlog:bool=False, filename:str=None):
-
   import contextlib
   import re
   from collections.abc import Iterable
@@ -23,7 +22,8 @@ def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False, tokenlog:boo
     'SYNTACTICAL', 'MULTILINE',
     'INDENTED', 'MAP', 'CYTHON',
     'STRING', 'APPENDSUB', 'SHORTHAND',
-    'MACROS', 'ESCAPEMENT', 'NEWLINELIKE'
+    'MACROS', 'ESCAPEMENT', 'NEWLINELIKE',
+    'EXTRA'
   ])
 
   id = 0
@@ -144,6 +144,7 @@ def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False, tokenlog:boo
     delDeconflict = Token(sclund('del'), TokenTypes.APPENDSUB)
     passDeconflict = Token(sclund('pass'), TokenTypes.APPENDSUB)
     comment = Token(r'\/\*[\s\S]*?\*\/', TokenTypes.INDENTED)
+    startlessComment = Token(r'(?!^)\/\*[\s\S]*?\*\/', TokenTypes.INDENTED, TokenTypes.EXTRA)
     lineComment = Token(r'\/\/.*', TokenTypes.INDENTED)
     lineStatement = Token(r'\/\|.*?\|\\', TokenTypes.INDENTED)
     intDiv = Token(r'~/', TokenTypes.MAP)
@@ -222,7 +223,7 @@ def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False, tokenlog:boo
                                 in_multilineStringDouble())
   in_string = False
   compilable = lambda: not in_string
-  tokenList = lambda: [t for t in [k for h, k in Tokens.__dict__.items() if not h.startswith('__')] if TokenTypes.CYTHON not in t.types or cythonic]
+  tokenList = lambda included=[]: [t for t in [k for h, k in Tokens.__dict__.items() if not h.startswith('__')] if (TokenTypes.CYTHON not in t.types or cythonic) and ((TokenTypes.EXTRA in t.types) == (t.id in included))]
 
   def string_compilable(token):
     match token.id:
@@ -275,7 +276,13 @@ def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False, tokenlog:boo
       ptoken = tokens[n - 1] if n > 0 else bufferToken
       if compilable():
         match token.id:
-          case Tokens.comment.id | Tokens.lineComment.id:
+          case Tokens.comment.id | Tokens.startlessComment.id :
+            if not in_string:
+              continue
+            else:
+              tokens = tokenize(token.symb, tokenList([Tokens.comment.id, Tokens.startlessComment.id]), buffer, tokenlog=tokenlog, filename=filename) + tokens[n + 1:]
+              raise breakout
+          case Tokens.lineComment.id:
             continue
           case Tokens.lineStatement.id:
             compiled_code += '#' + token.symb[2:-2].rstrip() + '\n' + indent * indent_level
