@@ -276,17 +276,15 @@ def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False, tokenlog:boo
       ptoken = tokens[n - 1] if n > 0 else bufferToken
       if compilable():
         match token.id:
-          case Tokens.comment.id | Tokens.startlessComment.id :
-            if not in_string:
-              continue
-            else:
-              tokens = tokenize(token.symb, tokenList([Tokens.comment.id, Tokens.startlessComment.id]), buffer, tokenlog=tokenlog, filename=filename) + tokens[n + 1:]
-              raise breakout
-          case Tokens.lineComment.id:
+          case Tokens.comment.id | Tokens.startlessComment.id | Tokens.lineComment.id:
             continue
           case Tokens.lineStatement.id:
             compiled_code += '#' + token.symb[2:-2].rstrip() + '\n' + indent * indent_level
             continue
+      elif token.id in [Tokens.comment.id, Tokens.startlessComment.id]:
+        tokens = tokenize(token.symb, tokenList([Tokens.comment.id, Tokens.startlessComment.id]), buffer,
+                            tokenlog, filename) + tokens[n + 1:]
+        raise breakout
       if in_string and not in_multilineString() and token.id == Tokens.escapeNewline.id:
         continue
       if (token.id == Tokens.indentLeftDouble.id
