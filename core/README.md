@@ -11,12 +11,12 @@ $ pip install nestpython
 ```
 After importing;
 
-- In order to compile a string from nestPython to python, use `nestpython.ncompile(string)`
+- In order to transpile a string from nestPython to python, use `nestpython.ncompile(string)`
 - In order to execute a nestPython string, use `nestpython.nexec(string)`
 
 	For both, optional argument `indent-level` determines the indentation increment in the resulting python file. It is set to 1 by default.
--  To execute and compile files and folders, use the `nestpython.files` module:
-	-  `nestpython.files.ncompile(file)`  compiles the given file to a string
+-  To execute and transpile files and folders, use the `nestpython.files` module:
+	-  `nestpython.files.ncompile(file)`  transpiles the given file to a string
 	-  `nestpython.files.nexec(file)` executes the file
     -  `nestpython.files.build(dir, new_dir)` builds an entire golder
     -  arguments can be provided.
@@ -66,7 +66,7 @@ Cython keywords are also altered for `.npx`:
 | `cdef`  |    `$=`    |
 | `cpdef` |   `~$=`    |
 
-Strings or ternaries do not have to be one-line, but if they are not, you can use `\ ` and `#` like the following.
+Strings or ternaries do not have to be one-line; if they are not, you can use `\ ` and `#` to reserve space characters as follows.
 ```
 'string \
 continues here'
@@ -78,10 +78,10 @@ is equivalent to
 'string continues here'
 ```
 
-and compiles to a python string with newl
-This is useful to make it clear that there is a space before the newline character. The backspace is simply ignored by the compiler.
+and transpiles to a python string with the newline ignored.
+This is useful to make it clear that there is a space before the newline character. The backspace is simply ignored by the transpiler.
 
-Same thing can be done with code and the `#` character:
+The same thing can be done with code and the `#` character:
 
 ```nestpython
 a if b #
@@ -92,15 +92,15 @@ is equivalent to
 a if b else c
 ```
 
-The `#` is ignored by the compiler.
+The `#` is ignored by the transpiler.
 
 
 ## comments
 
 - For block comments, use `/*`, `*/`.
 - For line comments, use `//`.
-- Block and line comments will be ignored during compilation.
-- For comments that need to be transpiled into python ones, use `/|`, `|\ `.
+- Block and line comments will be ignored during transpilation.
+- For comments that need to be transpiled into python line comments, use `/|`, `|\ `.
 
 *(to be continued)*
 

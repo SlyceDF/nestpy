@@ -144,7 +144,6 @@ def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False, tokenlog:boo
     delDeconflict = Token(sclund('del'), TokenTypes.APPENDSUB)
     passDeconflict = Token(sclund('pass'), TokenTypes.APPENDSUB)
     comment = Token(r'\/\*[\s\S]*?\*\/', TokenTypes.INDENTED)
-    startlessComment = Token(r'(?!^)\/\*[\s\S]*?\*\/', TokenTypes.INDENTED, TokenTypes.EXTRA)
     lineComment = Token(r'\/\/.*', TokenTypes.INDENTED)
     lineStatement = Token(r'\/\|.*?\|\\', TokenTypes.INDENTED)
     intDiv = Token(r'~/', TokenTypes.MAP)
@@ -276,13 +275,14 @@ def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False, tokenlog:boo
       ptoken = tokens[n - 1] if n > 0 else bufferToken
       if compilable():
         match token.id:
-          case Tokens.comment.id | Tokens.startlessComment.id | Tokens.lineComment.id:
+          case Tokens.comment.id | Tokens.lineComment.id:
             continue
           case Tokens.lineStatement.id:
             compiled_code += '#' + token.symb[2:-2].rstrip() + '\n' + indent * indent_level
             continue
-      elif token.id in [Tokens.comment.id, Tokens.startlessComment.id]:
-        tokens = tokenize(token.symb, tokenList([Tokens.comment.id, Tokens.startlessComment.id]), buffer,
+      elif token.id == Tokens.comment.id:
+        tokens = tokenize(token.symb[0], tokenList(), buffer,
+                            tokenlog, filename) + tokenize(token.symb[1:], tokenList(), buffer,
                             tokenlog, filename) + tokens[n + 1:]
         raise breakout
       if in_string and not in_multilineString() and token.id == Tokens.escapeNewline.id:
