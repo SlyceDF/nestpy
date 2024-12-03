@@ -25,7 +25,7 @@ After importing;
         - `erase_dir:bool=None`: determines whether the previously built directory should be completely erased. If not specified, you will be asked to specify in the console
         - `cythonic:bool=None`: determines if code should be perceived as nestCython or nestPython
         - `tokenlog=False`: determines if tokenization progress should be logged
-        - `new_file:str=None`: determines where to compile a source file. Reverts to the original filename with a .py extension if unspecified
+        - `new_file:str=None`: determines where to compile a source file. Reverts to the original filename with a .py(x) extension if unspecified
 
 Use `.npy` for nestPython files, `.npx` for nestCython files.
 
