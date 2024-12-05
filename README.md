@@ -11,21 +11,21 @@ $ pip install nestpython
 ```
 After importing;
 
-- In order to transpile a string from nestPython to python, use `nestpython.ncompile(str)`
-- In order to execute a nestPython string, use `nestpython.nexec(str)`
+- In order to transpile a string from nestPython to python, use `nestpython.ncompile(str)`.
+- In order to execute a nestPython string, use `nestpython.nexec(str)`.
 -  To transpile files and directories, use the `nestpython.files` module:
-	-  `nestpython.files.ncompile(file)` transpiles the specified file to a string
-    -  `nestpython.files.ncompile_to(file)` transpiles the specified file to a new file
-	-  `nestpython.files.nexec(file)` executes the specified file
-    -  `nestpython.files.build(dir, new_dir)` transpiles a directory
+	-  `nestpython.files.ncompile(file)` transpiles the specified file to a string.
+    -  `nestpython.files.ncompile_to(file)` transpiles the specified file to a new file.
+	-  `nestpython.files.nexec(file)` executes the specified file.
+    -  `nestpython.files.build(dir, new_dir)` transpiles a directory.
     -  arguments can be provided:
-		- `indent_amount=1`: determines the indentation increment in the resulting python file
-        - `transfer_other_files=True`: determines whether non-.npy (or .npx) files should be copied into the build directory
-        - `replace_previous=False`: determines whether already built files should be replaced
-        - `erase_dir:bool=None`: determines whether the previously built directory should be completely erased. If not specified, you will be asked to specify in the console
-        - `cythonic:bool=None`: determines if code should be perceived as nestCython or nestPython
-        - `tokenlog=False`: determines if tokenization progress should be logged
-        - `new_file:str=None`: determines where to compile a source file. Reverts to the original filename with a .py(x) extension if unspecified
+		- `indent_amount=1`: determines the indentation increment in the resulting python file.
+        - `transfer_other_files=True`: determines whether non-.npy (or .npx) files should be copied into the build directory.
+        - `replace_previous=False`: determines whether already built files should be replaced.
+        - `erase_dir:bool=None`: determines whether the previously built directory should be completely erased. If not specified, you will be asked to specify in the console.
+        - `cythonic:bool=None`: determines if code should be perceived as nestCython or nestPython.
+        - `tokenlog=False`: determines if tokenization progress should be logged.
+        - `new_file:str=None`: determines where to compile a source file. Reverts to the original filename with a .py(x) extension if unspecified.
 
 Use `.npy` for nestPython files, `.npx` for nestCython files.
 
@@ -107,6 +107,15 @@ The `#` is ignored by the transpiler.
 - For line comments, use `//`.
 - Block and line comments will be ignored during transpilation.
 - For comments that need to be cpiled into python ones, use `/|`, `|\ `.
+
+## macros
+
+- Use `# (name of the macro) #!(what it stands for)!#` to define a macro.
+- Macros are only accessible within the nesting they were defined in.
+- Use `#~ (name of the macro) ~#` to undefine the macro.
+- Use `#? (name of the macro) ?#` to get a boolean representing whether the macro is defined.
+- Use `$(name of the macro)` to use the macro.
+- Macros that are closer to the nesting called are prioritized.
 
 *(to be continued)*
 

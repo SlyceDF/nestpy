@@ -148,7 +148,7 @@ def ncompile(code:str, *, indent_amount:int=1, cythonic:bool=False, tokenlog:boo
     lineStatement = Token(r'\/\|.*?\|\\', TokenTypes.INDENTED)
     intDiv = Token(r'~/', TokenTypes.MAP)
     caseShorthand = Token(r'\?', TokenTypes.SHORTHAND)
-    macroDefine = Token(r'#\s*[\w\n]+\s*#\s*<[\s\S]*>\s*#', TokenTypes.MACROS)
+    macroDefine = Token(r'#\s*[\w\n]+\s*#![\s\S]*?!#', TokenTypes.MACROS)
     macroUndefine = Token(r'#~\s*[\w\n]+\s*~#', TokenTypes.MACROS)
     macroIfdef = Token(r'#\?\s*[\w\n]*\s*\?#', TokenTypes.MACROS)
     macroAccess = Token(r'\$[\w\n]*', TokenTypes.MACROS)
@@ -306,34 +306,35 @@ pass\n{indent * indent_level}')
       if TokenTypes.MACROS in token.types and compilable():
        match token.id:
         case Tokens.macroDefine.id:
-          macro = token.symb.split('#', 2)[1].strip().replace('\n', '')
-          sub = token.symb.split('#', 2)[2][:~0].strip()[1:-1]
+          macro = (token.symb.split('#', 2)[1].strip().replace('\n', ''), indent_level)
+          sub = token.symb.split('#', 2)[2][1:~1]
 
-          macros.update({macro: (sub, indent_level)})
+          macros.update({macro: sub})
           continue
         case Tokens.macroUndefine.id:
-          macro = token.symb.split('#')[1][1:-1].strip().replace('\n', '')
-          if macros[macro][1] == indent_level:
-            macros.pop(macro)
-          else:
-            raise SyntaxError(
-              f'nesting level {indent_level} does not \
-              match macro\'s {macros[macro][1]}'
-            )
+          macro = (token.symb.split('#')[1][1:-1].strip().replace('\n', ''), indent_level)
+          macros.pop(macro)
+          continue
         case Tokens.macroIfdef.id:
           macro = token.symb.split('#')[1][1:-1].strip().replace('\n', '')
           truth = False
-          if macro in macros:
-            truth = macros[macro][1] >= indent_level
+          for N in reversed(range(indent_level+1)):
+            if (macro, N) in macros:
+              truth = True
+              break
           if compiled_code[~0] != ' ' and compiled_code[~0] != '\n':
             compiled_code += ' '
           compiled_code += str(truth) + ' '
           continue
         case Tokens.macroAccess.id:
           if compilable():
-            macro = macros[token.symb[1:].replace('\n', '')][0]
-            tokens = tokenize(macro, tokenList(), buffer, tokenlog=tokenlog, filename=filename) + tokens[n + 1:]
-            raise breakout
+            macro = token.symb[1:].replace('\n', '')
+            for N in reversed(range(indent_level+1)):
+              if (nmacro := (macro, N)) in macros:
+                macro = macros[nmacro]
+                tokens = tokenize(macro, tokenList(), buffer, tokenlog=tokenlog, filename=filename) + tokens[n + 1:]
+                raise breakout
+            continue
           else:
             compiled_code += (token.symb if in_multilineString()
                               else token.symb.replace('\n', ''))
@@ -356,7 +357,7 @@ pass\n{indent * indent_level}')
           case Tokens.indentRight.id:
             indent_level -= 1
             for macro in list(macros):
-              if macros[macro][1] > indent_level:
+              if int(macro[~0]) > indent_level:
                 macros.pop(macro)
             compiled_code += '\n' + indent * indent_level
           case Tokens.indentNewline.id:
